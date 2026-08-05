@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,6 +17,7 @@ model Faculty {
   name     String    @unique
   subjects Subject[] // a faculty can have many subjects
   users    User[]    // a faculty can have many users
+  books    Book[]    // a faculty can have many books
 }
 
 // Represents a subject area within a faculty (e.g., "Torts" under Law)
@@ -27,17 +26,32 @@ model Subject {
   name      String                        // e.g., "Torts"
   facultyId String                         // foreign key column, stores the related Faculty's id
   faculty   Faculty @relation(fields: [facultyId], references: [id])
-  // ^ this line defines the actual relationship: "facultyId" points to a Faculty's "id"
+  books     Book[]  // a subject can have many books
 }
 
 // Represents a registered student
 model User {
-  id               String   @id @default(uuid())
-  universityEmail  String   @unique                    // e.g., student@kdu.ac.lk — domain-restricted, checked in app logic
-  name             String
-  facultyId        String                               // foreign key to Faculty
-  faculty          Faculty  @relation(fields: [facultyId], references: [id])
-  yearOfStudy      Int?                                 // the "?" makes this optional (nullable)
-  isVerified       Boolean  @default(false)              // starts false until email is verified
-  createdAt        DateTime @default(now())              // auto-set to current time when a row is created
+  id              String   @id @default(uuid())
+  universityEmail String   @unique                    // e.g., student@kdu.ac.lk — domain-restricted, checked in app logic
+  name            String
+  facultyId       String                               // foreign key to Faculty
+  faculty         Faculty  @relation(fields: [facultyId], references: [id])
+  yearOfStudy     Int?                                 // the "?" makes this optional (nullable)
+  isVerified      Boolean  @default(false)              // starts false until email is verified
+  createdAt       DateTime @default(now())              // auto-set to current time when a row is created
+}
+
+// Represents a unique book in the shared catalog (multiple listings can reference the same book)
+model Book {
+  id           String   @id @default(uuid())
+  isbn         String?  @unique                    // optional, but if present, must be unique (no duplicate ISBNs)
+  title        String
+  author       String
+  edition      String?                             // optional, e.g., "3rd Edition"
+  printedPrice Decimal? @db.Decimal(10, 2)          // optional — basis for the 50% discount rule
+  facultyId    String
+  faculty      Faculty  @relation(fields: [facultyId], references: [id])
+  subjectId    String
+  subject      Subject  @relation(fields: [subjectId], references: [id])
+  courseCode   String?                             // optional, e.g., "LAW201"
 }
