@@ -15,43 +15,82 @@ datasource db {
 model Faculty {
   id       String    @id @default(uuid())
   name     String    @unique
-  subjects Subject[] // a faculty can have many subjects
-  users    User[]    // a faculty can have many users
-  books    Book[]    // a faculty can have many books
+  subjects Subject[]
+  users    User[]
+  books    Book[]
 }
 
 // Represents a subject area within a faculty (e.g., "Torts" under Law)
 model Subject {
   id        String  @id @default(uuid())
-  name      String                        // e.g., "Torts"
-  facultyId String                         // foreign key column, stores the related Faculty's id
+  name      String
+  facultyId String
   faculty   Faculty @relation(fields: [facultyId], references: [id])
-  books     Book[]  // a subject can have many books
+  books     Book[]
 }
 
 // Represents a registered student
 model User {
-  id              String   @id @default(uuid())
-  universityEmail String   @unique                    // e.g., student@kdu.ac.lk — domain-restricted, checked in app logic
+  id              String    @id @default(uuid())
+  universityEmail String    @unique
   name            String
-  facultyId       String                               // foreign key to Faculty
-  faculty         Faculty  @relation(fields: [facultyId], references: [id])
-  yearOfStudy     Int?                                 // the "?" makes this optional (nullable)
-  isVerified      Boolean  @default(false)              // starts false until email is verified
-  createdAt       DateTime @default(now())              // auto-set to current time when a row is created
+  facultyId       String
+  faculty         Faculty   @relation(fields: [facultyId], references: [id])
+  yearOfStudy     Int?
+  isVerified      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  listings        Listing[] // a user can donate/list many books
 }
 
-// Represents a unique book in the shared catalog (multiple listings can reference the same book)
+// Represents a unique book in the shared catalog
 model Book {
-  id           String   @id @default(uuid())
-  isbn         String?  @unique                    // optional, but if present, must be unique (no duplicate ISBNs)
+  id           String    @id @default(uuid())
+  isbn         String?   @unique
   title        String
   author       String
-  edition      String?                             // optional, e.g., "3rd Edition"
-  printedPrice Decimal? @db.Decimal(10, 2)          // optional — basis for the 50% discount rule
+  edition      String?
+  printedPrice Decimal?  @db.Decimal(10, 2)
   facultyId    String
-  faculty      Faculty  @relation(fields: [facultyId], references: [id])
+  faculty      Faculty   @relation(fields: [facultyId], references: [id])
   subjectId    String
-  subject      Subject  @relation(fields: [subjectId], references: [id])
-  courseCode   String?                             // optional, e.g., "LAW201"
+  subject      Subject   @relation(fields: [subjectId], references: [id])
+  courseCode   String?
+  listings     Listing[] // a book can have many listings (copies from different donors)
+}
+
+// Fixed set of allowed condition values
+enum Condition {
+  NEW
+  GOOD
+  FAIR
+  WORN
+}
+
+// Fixed set of allowed price type values
+enum PriceType {
+  FREE
+  DISCOUNTED
+}
+
+// Fixed set of allowed listing status values
+enum ListingStatus {
+  AVAILABLE
+  REQUESTED
+  GIVEN_AWAY
+  FLAGGED
+}
+
+// Represents one donor's specific offer of a specific book
+model Listing {
+  id          String        @id @default(uuid())
+  bookId      String
+  book        Book          @relation(fields: [bookId], references: [id])
+  donorId     String
+  donor       User          @relation(fields: [donorId], references: [id])
+  condition   Condition
+  priceType   PriceType
+  listedPrice Decimal?      @db.Decimal(10, 2)   // only set if priceType is DISCOUNTED
+  note        String?
+  status      ListingStatus @default(AVAILABLE)
+  createdAt   DateTime      @default(now())
 }
