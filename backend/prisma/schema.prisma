@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Represents a university faculty (e.g., "Faculty of Law")
+model Faculty {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  subjects Subject[] // a faculty can have many subjects
+}
+
+// Represents a subject area within a faculty (e.g., "Torts" under Law)
+model Subject {
+  id        String  @id @default(uuid())
+  name      String                        // e.g., "Torts"
+  facultyId String                         // foreign key column, stores the related Faculty's id
+  faculty   Faculty @relation(fields: [facultyId], references: [id])
+  // ^ this line defines the actual relationship: "facultyId" points to a Faculty's "id"
+}
