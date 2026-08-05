@@ -39,7 +39,8 @@ model User {
   yearOfStudy     Int?
   isVerified      Boolean   @default(false)
   createdAt       DateTime  @default(now())
-  listings        Listing[] // a user can donate/list many books
+  listings        Listing[]  // books this user has donated/listed
+  requests        Request[]  // books this user has requested from others
 }
 
 // Represents a unique book in the shared catalog
@@ -55,10 +56,9 @@ model Book {
   subjectId    String
   subject      Subject   @relation(fields: [subjectId], references: [id])
   courseCode   String?
-  listings     Listing[] // a book can have many listings (copies from different donors)
+  listings     Listing[]
 }
 
-// Fixed set of allowed condition values
 enum Condition {
   NEW
   GOOD
@@ -66,13 +66,11 @@ enum Condition {
   WORN
 }
 
-// Fixed set of allowed price type values
 enum PriceType {
   FREE
   DISCOUNTED
 }
 
-// Fixed set of allowed listing status values
 enum ListingStatus {
   AVAILABLE
   REQUESTED
@@ -82,15 +80,47 @@ enum ListingStatus {
 
 // Represents one donor's specific offer of a specific book
 model Listing {
-  id          String        @id @default(uuid())
+  id          String         @id @default(uuid())
   bookId      String
-  book        Book          @relation(fields: [bookId], references: [id])
+  book        Book           @relation(fields: [bookId], references: [id])
   donorId     String
-  donor       User          @relation(fields: [donorId], references: [id])
+  donor       User           @relation(fields: [donorId], references: [id])
   condition   Condition
   priceType   PriceType
-  listedPrice Decimal?      @db.Decimal(10, 2)   // only set if priceType is DISCOUNTED
+  listedPrice Decimal?       @db.Decimal(10, 2)
   note        String?
-  status      ListingStatus @default(AVAILABLE)
-  createdAt   DateTime      @default(now())
+  status      ListingStatus  @default(AVAILABLE)
+  createdAt   DateTime       @default(now())
+  images      ListingImage[] // photos attached to this listing
+  requests    Request[]      // requests made for this listing
+}
+
+// Represents one photo attached to a listing
+model ListingImage {
+  id        String  @id @default(uuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  imageUrl  String  // Cloudinary URL
+}
+
+// Fixed set of allowed request status values
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+}
+
+// Represents a student's request to receive a specific listing
+model Request {
+  id                  String        @id @default(uuid())
+  listingId           String
+  listing             Listing       @relation(fields: [listingId], references: [id])
+  requesterId         String
+  requester           User          @relation(fields: [requesterId], references: [id])
+  status              RequestStatus @default(PENDING)
+  donorConfirmed      Boolean       @default(false)
+  requesterConfirmed  Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  completedAt         DateTime?
 }
