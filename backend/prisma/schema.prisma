@@ -31,16 +31,18 @@ model Subject {
 
 // Represents a registered student
 model User {
-  id              String    @id @default(uuid())
-  universityEmail String    @unique
+  id              String     @id @default(uuid())
+  universityEmail String     @unique
   name            String
   facultyId       String
-  faculty         Faculty   @relation(fields: [facultyId], references: [id])
+  faculty         Faculty    @relation(fields: [facultyId], references: [id])
   yearOfStudy     Int?
-  isVerified      Boolean   @default(false)
-  createdAt       DateTime  @default(now())
+  isVerified      Boolean    @default(false)
+  createdAt       DateTime   @default(now())
   listings        Listing[]  // books this user has donated/listed
   requests        Request[]  // books this user has requested from others
+  wishlistItems   Wishlist[] // this user's "notify me" entries
+  reports         Report[]   // reports this user has filed
 }
 
 // Represents a unique book in the shared catalog
@@ -91,8 +93,9 @@ model Listing {
   note        String?
   status      ListingStatus  @default(AVAILABLE)
   createdAt   DateTime       @default(now())
-  images      ListingImage[] // photos attached to this listing
-  requests    Request[]      // requests made for this listing
+  images      ListingImage[]
+  requests    Request[]
+  reports     Report[]       // reports filed against this listing
 }
 
 // Represents one photo attached to a listing
@@ -100,10 +103,9 @@ model ListingImage {
   id        String  @id @default(uuid())
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id])
-  imageUrl  String  // Cloudinary URL
+  imageUrl  String
 }
 
-// Fixed set of allowed request status values
 enum RequestStatus {
   PENDING
   ACCEPTED
@@ -113,14 +115,44 @@ enum RequestStatus {
 
 // Represents a student's request to receive a specific listing
 model Request {
-  id                  String        @id @default(uuid())
-  listingId           String
-  listing             Listing       @relation(fields: [listingId], references: [id])
-  requesterId         String
-  requester           User          @relation(fields: [requesterId], references: [id])
-  status              RequestStatus @default(PENDING)
-  donorConfirmed      Boolean       @default(false)
-  requesterConfirmed  Boolean       @default(false)
-  createdAt           DateTime      @default(now())
-  completedAt         DateTime?
+  id                 String        @id @default(uuid())
+  listingId          String
+  listing            Listing       @relation(fields: [listingId], references: [id])
+  requesterId        String
+  requester          User          @relation(fields: [requesterId], references: [id])
+  status             RequestStatus @default(PENDING)
+  donorConfirmed     Boolean       @default(false)
+  requesterConfirmed Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  completedAt        DateTime?
+}
+
+// Represents a "notify me" entry when a user's search returns nothing
+model Wishlist {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  bookTitleQuery String                        // free-text search the user typed
+  subjectArea    String?                       // optional free-text subject hint
+  notified       Boolean  @default(false)       // flips true once a matching book is found and user is told
+  createdAt      DateTime @default(now())
+}
+
+// Fixed set of allowed report status values
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+// Represents a user-submitted report against a listing (moderation)
+model Report {
+  id         String       @id @default(uuid())
+  listingId  String
+  listing    Listing      @relation(fields: [listingId], references: [id])
+  reportedBy String
+  reporter   User         @relation(fields: [reportedBy], references: [id])
+  reason     String
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
 }
