@@ -18,6 +18,7 @@ model Faculty {
   id       String    @id @default(uuid())
   name     String    @unique
   subjects Subject[] // a faculty can have many subjects
+  users    User[]    // a faculty can have many users
 }
 
 // Represents a subject area within a faculty (e.g., "Torts" under Law)
@@ -27,4 +28,16 @@ model Subject {
   facultyId String                         // foreign key column, stores the related Faculty's id
   faculty   Faculty @relation(fields: [facultyId], references: [id])
   // ^ this line defines the actual relationship: "facultyId" points to a Faculty's "id"
+}
+
+// Represents a registered student
+model User {
+  id               String   @id @default(uuid())
+  universityEmail  String   @unique                    // e.g., student@kdu.ac.lk — domain-restricted, checked in app logic
+  name             String
+  facultyId        String                               // foreign key to Faculty
+  faculty          Faculty  @relation(fields: [facultyId], references: [id])
+  yearOfStudy      Int?                                 // the "?" makes this optional (nullable)
+  isVerified       Boolean  @default(false)              // starts false until email is verified
+  createdAt        DateTime @default(now())              // auto-set to current time when a row is created
 }
