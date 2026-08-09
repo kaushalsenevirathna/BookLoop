@@ -34,15 +34,16 @@ model User {
   id              String     @id @default(uuid())
   universityEmail String     @unique
   name            String
+  passwordHash    String                          // hashed password, never store plain text
   facultyId       String
   faculty         Faculty    @relation(fields: [facultyId], references: [id])
   yearOfStudy     Int?
   isVerified      Boolean    @default(false)
   createdAt       DateTime   @default(now())
-  listings        Listing[]  // books this user has donated/listed
-  requests        Request[]  // books this user has requested from others
-  wishlistItems   Wishlist[] // this user's "notify me" entries
-  reports         Report[]   // reports this user has filed
+  listings        Listing[]
+  requests        Request[]
+  wishlistItems   Wishlist[]
+  reports         Report[]
 }
 
 // Represents a unique book in the shared catalog

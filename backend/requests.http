@@ -1,0 +1,9 @@
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "universityEmail": "test@student.ac.lk",
+  "name": "Test Student",
+  "password": "testpass123",
+  "facultyId": "af8b25e0-7f24-411d-984c-9cb3cc7cbb4a"
+}
