@@ -1,9 +1,31 @@
+### Test 1: Valid signup
 POST http://localhost:3000/auth/signup
 Content-Type: application/json
 
 {
-  "universityEmail": "test@student.ac.lk",
+  "universityEmail": "test2@student.ac.lk",
   "name": "Test Student",
+  "password": "testpass123",
+  "facultyId": "af8b25e0-7f24-411d-984c-9cb3cc7cbb4a"
+}
+
+### Test 2: Missing required field (no email)
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "name": "No Email Test",
+  "password": "testpass123",
+  "facultyId": "af8b25e0-7f24-411d-984c-9cb3cc7cbb4a"
+}
+
+### Test 3: Non-academic email
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "universityEmail": "test@gmail.com",
+  "name": "Bad Email Test",
   "password": "testpass123",
   "facultyId": "af8b25e0-7f24-411d-984c-9cb3cc7cbb4a"
 }
